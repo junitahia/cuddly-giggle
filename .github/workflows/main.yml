@@ -1,0 +1,39 @@
+name: Windows RDP
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Create Windows RDP
+    steps:
+      - name: Install QEMU
+        run: |
+          sudo apt update
+          sudo apt install -y qemu-kvm qemu-utils qemu-system-x86
+
+      - name: Download Tiny11 ISO
+        run: |
+          wget https://archive.org/download/tiny11_202303 -O tiny11.iso
+
+      - name: Create Virtual Disk
+        run: |
+          qemu-img create -f qcow2 tiny11.img 50G
+
+      - name: Run Windows (Tiny11)
+        run: |
+          nohup qemu-system-x86_64 \
+          -m 4096 \
+          -smp cores=2 \
+          -boot d \
+          -cdrom tiny11.iso \
+          -hda tiny11.img \
+          -net user,hostfwd=tcp::3389-:3389 \
+          -net nic \
+          -vga std \
+          -nographic &
+          sleep 360
+
+      - name: Done
+        run: echo "Tiny11 is running. Check logs for RDP IP."
