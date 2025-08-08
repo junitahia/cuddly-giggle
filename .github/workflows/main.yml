@@ -1,0 +1,40 @@
+name: Windows RDP
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Create Windows RDP
+    steps:
+    - name: Setup QEMU
+      run: |
+        sudo apt update
+        sudo apt install -y qemu qemu-system qemu-utils
+
+    - name: Download Windows
+      run: |
+        wget https://tinyurl.com/tinywin11 -O tiny11.iso
+
+    - name: Create virtual disk
+      run: |
+        qemu-img create -f qcow2 tiny11.img 50G
+
+    - name: Boot Windows in QEMU
+      run: |
+        nohup qemu-system-x86_64 \
+        -m 4096 \
+        -smp cores=2 \
+        -boot d \
+        -cdrom tiny11.iso \
+        -hda tiny11.img \
+        -net user,hostfwd=tcp::3389-:3389 \
+        -net nic \
+        -vga std \
+        -enable-kvm \
+        -nographic &
+        sleep 300
+
+    - name: Done
+      run: echo "Windows RDP Ready. Connect via IP shown in Action logs."
